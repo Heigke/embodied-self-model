@@ -1,0 +1,6 @@
+numpy
+mujoco
+robot_descriptions
+imageio
+imageio-ffmpeg
+matplotlib
