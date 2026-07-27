@@ -144,9 +144,9 @@ def main():
     print( "         drives the decision. Cut the wire -> it goes flat.")
     print( "         That is the mechanism, verified by intervention.")
     line()
-    print("\nThis is the minimal mechanism only. The full, verified results (large")
-    print("LLMs, learned-in-weight coupling, shuffle/specificity controls) require a")
-    print("GPU - see README.md > 'Hardware requirements'.  ->  https://www.enimble.se/embodied\n")
+    print("\nThis is the mechanism in miniature. The real program runs it on 7B-35B")
+    print("models with the GPU's own metered joules as the body - including the parts")
+    print("that fail. See README.md and NOTES_how_we_fooled_ourselves.md\n")
 
 if __name__ == "__main__":
     main()
