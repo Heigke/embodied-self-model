@@ -109,8 +109,59 @@ We kept the base model frozen throughout, and repeatedly measured that it did no
 
 ---
 
+### 11. An ignition result that was an algebraic identity
+
+We injected a unit direction into the residual stream at layer 52 with scale α, read the projection onto the verbalizable-workspace cone, and divided by α. The gain came out flat — 537.3 at α=0.125 and 537.3 at α=6 — and we concluded that entry into the workspace is graded rather than all-or-none.
+
+The residual stream has an identity skip. The injection scale is the mean residual norm, **575**. The cone fraction of our direction was **0.9326**. Their product is **536.2**, against a measured **537.3** — agreement to 0.2 %. A twenty-line synthetic with no network in it at all reproduces the curve with relative range **0.000000**. Our reported 3 % variation *was the entire contribution of a 32-billion-parameter model.*
+
+Two further defects, both ours:
+
+- **The threshold could not be passed.** Our bar required the network to spontaneously add an in-cone component ~0.47× the norm of the whole injected vector. A *planted*, textbook, unmistakable 50 % all-or-none amplification scores **FAIL** on our rig. We pre-registered a bar roughly 16× above the achievable signal and reported the miss as a fact about the model.
+- **A competition result was a dictionary-budget artifact.** Our sub-additivity test used a fixed k=10 sparse fit, and each injected direction was *built from 10 atoms* — so a two-direction mixture had to be fit with half the budget it needed. The no-network synthetic gives 0.875 / 0.966 / 1.255 for matched-in-cone / matched-random / unmatched; we measured 0.827 / 0.990 / 1.149. The competition was for slots in our own solver.
+
+And what we had banked as the strongest evidence was the tell: two runs agreeing to **1.4 %** across different prompt counts, different α grids and different direction construction. Real neural measurements do not replicate that well under changed prompts. Algebraic identities do.
+
+**Fix, one line:** subtract the known pass-through before projecting — `‖P_cone(δ − α·scale·u)‖/α`. On the same planted signals that scores 88.8 instead of 0.032. Three orders of magnitude of sensitivity.
+
+**Rule adopted:** suspiciously good replication is evidence of a tautology, not of a fact. And every injection-based readout is checked against its analytic pass-through before it is believed.
+
+---
+
+### 12. "Real hardware wired to decisions" was a labelled flashcard
+
+We trained a real-weight edit on live GB10 telemetry — joules, temperature, clock — and measured that inducing genuine load made the model choose the protective action. Closed loop on fresh readings: **0.989**. Reverting the edit: 0.14. Forgetting: KL 0.002.
+
+The normaliser subtracts the midpoint of the two training readings and divides by their difference. Substituting the only two training inputs gives **(−0.5, −0.5, +0.5)** and **(+0.5, +0.5, −0.5)** — antipodal, *for any hardware values whatsoever*. The model never saw more than one bit, and the "shift" is the training accuracy of a two-point classifier on its own two points.
+
+Worse in detail:
+- The code sleeps 300 ms *after* the load completes, so the "hot" power reading is the cooldown. Normalised it is **−0.07** — the joule channel, the headline organ of the whole program, sat on the decision boundary carrying nothing. The bit rode entirely on thermal lag.
+- Evaluation used the exact task strings and word pairs seen in training. Zero held-out prompts.
+- The forgetting number was measured on the same two prompts used as the KL anchor *inside the training loss*.
+- The coherence check ran at the mean body value, which normalises to the zero vector — coherence was verified with no injection at all.
+
+**Controls now mandatory for any body-wiring claim.** *Synthetic body*: replace the sensor with a coin flip; if the number survives, the claim is about the wire. *Crosswire*: keep the machine genuinely idle and inject the stored "hot" reading; if the decision still flips, the loop is the script's, not the model's.
+
+---
+
+### 13. A recovery number inside the free lunch
+
+We lesioned half the weights of four MLP output matrices, forbade editing them, and healed by self-supervised training that grew new connections around the damage — 80.4 % recovery on held-out text, and reverting the new connections restored the damage.
+
+The whole lesion costs **0.139 nats**. Published work (the "Hydra effect") shows transformers spontaneously recover ~70 % of an ablation with **zero training**, because downstream layers route around it. Our heal corpus was eight generic sentences, evaluated on five held sentences of the same register. Until the sham-heal arm runs — identical steps on an *undamaged* model — nothing distinguishes function-specific repair from getting better at encyclopedic English.
+
+Also: the "2,036,858 grown connections", identical across all four layers, is `int(0.03 × 3584 × 18944)` — a fixed density budget, not an emergent count.
+
+**What survived, and it is the useful negative:** across four increasingly damaged states, CKA reads **0.9999, 0.9997, 0.9996, 0.9993** while task accuracy falls from 0.944 to 0.778. It is flat to four decimal places through a quarter of the capability draining away, and collapses only once the model is already destroyed. **CKA alarms after the catastrophe and cannot be the online recoverability gate the continual-learning literature proposes.** The blunt displacement measure we already use moves 160× in the same window. (Power warning belongs to the claim: n = 7, p ≈ 0.2 — the design cannot resolve the margin, so this is "no support", not "refuted".)
+
+---
+
 ## The pattern
 
-Nine of the ten are the same shape: **we measured something we had installed, or failed to measure something we had prevented, and did not run the control that would have told us which.**
+Nine of the first ten are the same shape: **we measured something we had installed, or failed to measure something we had prevented, and did not run the control that would have told us which.**
 
-The two habits that catch it: (a) *always run the null condition your statistic would score on nothing*, and (b) *validate the instrument before trusting its silence.*
+Eleven through thirteen add a second shape, and it is the more embarrassing one: **we measured our own instrument and read the answer as a fact about the model.** An identity skip carrying an injected vector, a normaliser collapsing any two readings to one bit, a solver running out of dictionary slots.
+
+The habits that catch both: (a) *always run the null condition your statistic would score on nothing*; (b) *validate the instrument before trusting its silence*; (c) *before believing a number, compute what it would be if the model were removed entirely*; and (d) *treat a suspiciously exact replication as a warning, not a confirmation*.
+
+Three of these were found by asking someone outside the project to read the code and try to break it. That is the cheapest habit on this list and the one we adopted last.

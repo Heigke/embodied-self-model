@@ -17,11 +17,13 @@ Independent research, one 119 GB GB10 box, open models (Qwen 7B–35B).
 | Self-report tracks **real chip temperature** | 0.82 | random direction 0.20 |
 | Forward model learns the action→Δbody law | z = 6.77 | shuffled body can't learn |
 | Per-organ selectivity (disk→nvme, gpu→energy) | R² 0.95 / 0.98 | 4/4 seeds, z_med 8.60 |
-| Residual-stream write flips the policy | ΔP +0.83 | argmax flip 8/8 |
 | Forget-free real-weight consolidation | KL 0.39 | LoRA 7.73 |
 | Self-state survives a silent gap | 0.343 | scrub kills it |
 | Decodable self-locus (not the token "I") | d = 4.59 | permutation z = 23 |
 | Body-blind agent **dies**; body-aware rests and solves | 1/6 vs solved | same environment |
+| Body **arrives** but does not enter the verbalizable workspace | z = −0.14, 0/23 layers | Jacobian-lens positive control reads *Italy*, *boot* |
+| Sense organ sees its world on an **empty** machine | AUC 0.854 vs null 0.508 | same code at 40.9 W: 0.550 vs 0.540 |
+| **CKA cannot be a recoverability gate** | flat to 4 d.p. while accuracy falls 0.944→0.778 | KL moves 160× in the same window |
 
 ## Does not hold
 
@@ -30,11 +32,20 @@ Independent research, one 119 GB GB10 box, open models (Qwen 7B–35B).
 - **Represent but don't route.** Lens mediation, decision patching and an SAE clamp all agree: the state is represented, not routed into the report.
 - **We retracted our own "sayable body" result** — a kill-test showed it was logit forcing.
 - **Homeostasis can be a prompt-proxy.** Regulation that survives cutting the sensor was regulating a *predicted* body.
-- **Introspection null at 35B** — but capability-gated, so ambiguous. 70B doesn't fit the box.
+- **Introspection null at 35B** — but capability-gated, so ambiguous. 70B doesn't fit the box. Binary yes/no detection is now known to be confounded by a global affirmative shift (independently: net signal −0.01 ± 0.03 after control subtraction); forced-choice-from-N and within-trial magnitude comparison survive.
+- **The body cannot be sensed under our own footprint.** A co-tenant occupying 61 % of wall clock is invisible at 40.9 W (AUC 0.550 vs null 0.540) and clearly visible at 5.5 W (0.854). Aggregate telemetry is a scalar sum; attribution is the missing equation.
 
-## Now (2026-07-27)
+## Now (2026-07-30)
 
-Backbone **thawed** at unit-selected sites — it was frozen for seven months, which made every "it doesn't read the body" result uninterpretable. Write-channel positive control now passes at **z = 26.7** (was 1.14); **every null recorded before that repair is void.** Body being widened: the old vector spanned ~2.57 directions with `gpu_temp ~ gpu_power` at **r = 0.992** — five views of one heat curve, not five organs.
+Backbone **thawed** at unit-selected sites — it was frozen for seven months, which made every "it doesn't read the body" result uninterpretable.
+
+Three results were struck this week, two of them by an outside reviewer who read the code and ran its own controls:
+
+- **An "ignition" measurement was an algebraic identity.** Injection scale 575 × cone fraction 0.9326 = 536.2; measured 537.3. A no-network synthetic reproduces it with relative range 0.000000. The pre-registered bar was also unreachable: a *planted* 50 % all-or-none amplification scores FAIL on our own rig. Anthropic had already run the experiment on the right axis (mixture between competing concepts, not amplitude) and found sharp bimodal commitment — the opposite conclusion.
+- **A "real hardware wired to decisions" result was a two-point lookup table.** The normaliser maps any two body readings to ±the same vector, so the model never saw more than one bit; evaluation was on the training prompts verbatim; and the joule channel sat on the decision boundary carrying nothing.
+- **A previously reported write-channel positive control (z = 26.7) and a ΔP = +0.83 policy flip are withdrawn** — the first failed a specificity control, the second is not supported by the artifact.
+
+**Rule added:** suspiciously good replication is evidence of a tautology. Two runs agreeing to 1.4 % across changed prompts, grids and direction construction should trigger a synthetic no-network control, not a bank.
 
 ## Open problems
 
