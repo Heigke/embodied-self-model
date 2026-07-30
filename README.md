@@ -1,16 +1,32 @@
 # Embodied Self-Model
 
-Feeding a language model **its own measured hardware state** — joules, temperature, throttle, pressure — and asking whether it becomes *load-bearing* in the model's own self-representation.
+Feeding a language model **its own measured hardware state** — joules, temperature, clock, contention, memory pressure — and asking whether it becomes *load-bearing* in the model's own self-representation, in real weights, while it runs.
 
 One rule governs everything: **decodable ≠ load-bearing.** A probe recovering a representation proves nothing. It counts only if intervening on it changes downstream computation. Nothing here rests on a correlation.
 
-The most useful part of this repo is where that rule bit us → **[NOTES_how_we_fooled_ourselves.md](NOTES_how_we_fooled_ourselves.md)**
+**Most results here are nulls.** That is the point, and the most useful file in the repo is the one where the rule bit us → **[NOTES_how_we_fooled_ourselves.md](NOTES_how_we_fooled_ourselves.md)** — thirteen results we killed ourselves, with the arithmetic.
 
-Independent research, one 119 GB GB10 box, open models (Qwen 7B–35B).
+Independent research. Evenings, borrowed workstations, one 119 GB GB10 box, open models (Qwen 7B–35B).
 
 ---
 
-## Holds
+## The headline result
+
+We re-implemented the **Jacobian lens** ([Gurnee, Sofroniew, Lindsey et al., July 2026](https://transformer-circuits.pub/2026/workspace/index.html)) and pointed it at a signal that paper explicitly places out of scope — the model's own *physical implementation*.
+
+> **The body arrives and does not enter the verbalizable workspace.**
+> Workspace loading **z = −0.14**, **0 of 23 layers** above z = 2.
+> Positive control on the same rig reads *Italy* and *boot* correctly, so the instrument is not silent.
+
+The paper states its results "are not relevant to assessing consciousness according to [substrate-based] theories" because they concern computation rather than physical implementation. Both invited commentaries then named a body as the gap — Dehaene & Naccache on "its lack of a body… capable of emitting pleasure or pain signals", and Eleos citing Seth on interoception. This repo is an attempt to build that arm and measure it rather than argue about it.
+
+**Caveat we hold against ourselves:** every one of our self-observation nulls so far measured an *untrained* write. Whether a null there is informative at all is currently an open question, and it is the one we would most like an outside answer to.
+
+---
+
+---
+
+## Also holds
 
 | Result | Number | Control it cleared |
 |---|---|---|
@@ -21,7 +37,6 @@ Independent research, one 119 GB GB10 box, open models (Qwen 7B–35B).
 | Self-state survives a silent gap | 0.343 | scrub kills it |
 | Decodable self-locus (not the token "I") | d = 4.59 | permutation z = 23 |
 | Body-blind agent **dies**; body-aware rests and solves | 1/6 vs solved | same environment |
-| Body **arrives** but does not enter the verbalizable workspace | z = −0.14, 0/23 layers | Jacobian-lens positive control reads *Italy*, *boot* |
 | Sense organ sees its world on an **empty** machine | AUC 0.854 vs null 0.508 | same code at 40.9 W: 0.550 vs 0.540 |
 | **CKA cannot be a recoverability gate** | flat to 4 d.p. while accuracy falls 0.944→0.778 | KL moves 160× in the same window |
 
@@ -47,6 +62,12 @@ Three results were struck this week, two of them by an outside reviewer who read
 
 **Rule added:** suspiciously good replication is evidence of a tautology. Two runs agreeing to 1.4 % across changed prompts, grids and direction construction should trigger a synthetic no-network control, not a bank.
 
+## Why
+
+The reason to root a body in at all: a system with real limits, real costs and a real edge against a chaotic environment has something to explore *from*, and something to be careful *about*. If any of that is achievable it should show up as measurable consequences in the model's own computation — not as language about feelings. That is the whole bet, and it is currently unproven.
+
+**Ceiling, held throughout:** functional and mechanistic. No claim anything is felt, no bridge law assumed in either direction.
+
 ## Open problems
 
 1. **Write-to-route.** Reading is mature, writing is blunt. Is there a *surgical* intervention that makes a non-lexical signal load-bearing without wrecking capability?
@@ -69,9 +90,8 @@ python embodied_epsilon.py           # feed the body as prediction ERROR, not st
 
 `embodied_epsilon.mp4` — rendered run of that loop.
 
-## Ceiling
+---
 
-Functional and mechanistic only. No claim anything is *felt*; no bridge law assumed either way. Several consciousness indicators are pass-by-construction if you design to them — and the non-gameable ones are exactly the ones we currently fail.
+**Eric Bergvall** · Stockholm, Sweden · bergvall.eric@gmail.com · [enimble.se](https://www.enimble.se)
 
-**Eric Bergvall** · bergvall.eric@gmail.com · [enimble.se](https://www.enimble.se)
-Critique welcome, especially the kind that kills a result.
+Critique welcome, especially the kind that kills a result. Three of the thirteen entries in the notes were found by asking someone outside the project to read the code and try to break it — that is the cheapest habit on the list and the one we adopted last.
