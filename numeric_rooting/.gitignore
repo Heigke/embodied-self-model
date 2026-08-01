@@ -1,0 +1,3 @@
+results/*.jsonl
+results/*.json
+!results/summary_*.json
