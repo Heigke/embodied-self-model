@@ -14,7 +14,7 @@ Run:  python -m numeric_rooting.run_night            # all phases
       python -m numeric_rooting.run_night A          # one phase
 Resumes automatically from results/*.jsonl. Summaries -> results/summary_*.json.
 """
-import sys, time, itertools
+import sys, time, itertools, subprocess
 import numpy as np
 from .system import abstract_loop, ConcreteLoop
 from .reader import recoverability_curve
@@ -24,6 +24,23 @@ from . import checkpoint
 
 RES = "numeric_rooting/results"
 CLK = time.time
+BRANCH = "claude/numeric-rooting-mac-5qy5xm"
+
+
+def git_persist(msg):
+    """Self-persist checkpoint logs to the remote so frequent container restarts
+       never lose more than the last ~40 cells. Best-effort; failures are ignored."""
+    try:
+        subprocess.run("git add -f numeric_rooting/results/cells_*.jsonl "
+                       "numeric_rooting/results/summary_*.json",
+                       shell=True, check=False, timeout=30,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["git", "commit", "-q", "-m", msg], check=False, timeout=30,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["git", "push", "origin", BRANCH], check=False, timeout=90,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
 
 # neighbour profiles (rebuilt from params, since lambdas can't be checkpointed)
 def const_neigh(level=0.10):
@@ -195,9 +212,13 @@ def main(which=None):
             cells, run_fn,
             jsonl_path=f"{RES}/cells_{ph}.jsonl",
             summary_path=f"{RES}/summary_{ph}.json",
-            summary_every=20, clock=CLK)
+            summary_every=40, clock=CLK,
+            on_summary=lambda recs, ph=ph: git_persist(
+                f"night auto-checkpoint: phase {ph}, {len(recs)} cells done"))
+        git_persist(f"night: phase {ph} complete")
         print(f"==== PHASE {ph} complete ====", flush=True)
     print("\nALL PHASES COMPLETE", flush=True)
+    git_persist("night: ALL PHASES COMPLETE")
 
 
 if __name__ == "__main__":
