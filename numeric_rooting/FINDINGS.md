@@ -228,3 +228,43 @@ KL/PPL are scalars. Reading the actual generations (`results/behaviour_samples.t
 So the behavioural picture matches the numbers: the safe/unbiased channel is invisible in the
 text, and the one load-bearing channel (gain) has a real, coherent, steerable window before the
 wall — and even closes a stable loop on the model's own uncertainty.
+
+## Deep rooting — the body INSIDE the multiply-accumulate (30 cells)
+
+The tensor-core MMA is not addressable from CPU, but the matmul can be reimplemented as an
+explicit **split-k accumulation** and the body rooted into the accumulation itself
+(`matmul_deep.py`): round the running accumulator each K-block (`round`), modulate each partial
+sum's gain (`gain`), or reorder the block summation (`order`, Site B). The split-k rewrite is
+exact at b=0 (KL 0.00004). Sweeping the block count `nb` = *how deep the rooting goes*:
+
+**Q1 — rooting the ROUNDING deeper compounds it, strongly.** kl_single vs nb:
+
+| dose | nb1 | nb4 | nb8 | nb16 | nb32 |
+|---|---|---|---|---|---|
+| 0.2 | 0.00003 | 0.00017 | 0.00039 | 0.00097 | **0.00425** |
+| 0.5 | 0.00007 | 0.00030 | 0.00095 | 0.00358 | **0.01534** |
+
+Each block boundary is another rounding event, so finer split-k multiplies the perturbation
+~100–200× from output (nb1) to nb32. **Where in the accumulation you round matters enormously** —
+the same nominal dose is two orders of magnitude more potent rooted deep than rooted at the output.
+
+**Q2 — the load-bearing GAIN wants the opposite: shallow rooting.** The mean effect
+(kl_seedmean, what survives seed-averaging) at dose 0.07: nb1 **0.0112**, nb4 0.0106, nb8 0.0088,
+nb16 0.0089, nb32 0.0069. Distributing the gain across many blocks lets the per-block jitter
+average out *within* the sum, so the surviving mean effect *falls* with depth. **Gain belongs at
+the output (or coarse blocks); rounding belongs deep.** Opposite preferences — a real design fact.
+
+**Q3 — accumulation order (Site B) is exactly null at fp32.** Permuting the block summation
+order moves behaviour by 0.000000 at nb4/16/64: fp32 is too precise for non-associativity to
+bite. But under **low precision** it does — roundV (m_eff≈3) with deeper split-k:
+nb4 KL 0.022 (PPL ×1.04) → nb16 0.140 (×1.10) → nb64 **0.420 (×1.97, near breakage)**. Site B
+only becomes a channel once the arithmetic is already coarse; at fp32 it carries nothing.
+
+**Deep-rooting synthesis:** depth is a genuine lever, but a *sign-dependent* one — rooting the
+rounding deep compounds it 100×+, while rooting the load-bearing gain deep dilutes it. The body
+belongs at different arithmetic sites depending on whether it enters as variance (deep) or as a
+mean-effect gain (shallow). Non-associativity (Site B) is inert until precision is already low.
+The tensor-core MMA remains out of reach on this hardware — that is the one rung below this.
+
+*Reproduce deep:* `python -m numeric_rooting.matmul_deep` ·
+`python -m numeric_rooting.gpt2_deep_sweep` · behaviour: `python -m numeric_rooting.gpt2_behaviour`.
