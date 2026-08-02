@@ -268,3 +268,69 @@ The tensor-core MMA remains out of reach on this hardware — that is the one ru
 
 *Reproduce deep:* `python -m numeric_rooting.matmul_deep` ·
 `python -m numeric_rooting.gpt2_deep_sweep` · behaviour: `python -m numeric_rooting.gpt2_behaviour`.
+
+## The exchange — what do you GAIN by giving up strict arithmetic?
+
+The programme's rule is that the body must not be *noise going in* but something the model
+can act *with*. So every test here fixes the perturbation MAGNITUDE and varies only the
+STRUCTURE: `body` = a reproducible/coherent signal, `noise` = matched-magnitude random.
+Any advantage of `body` over `noise` is an advantage of structure, not of perturbation.
+
+### 1. A body is a reproducible, orderable temperament; noise is not (`gpt2_advantage.py`)
+
+- **Reproducibility.** Same body → *identical* generation on rerun; matched noise → different
+  every run. Giving up bit-exactness for a *reproducible* signal buys a persona you can return
+  to and control; giving it up for noise buys nothing you can hold.
+- **Separability.** Four distinct bodies give measurably different personas (diversity spread
+  0.08, valence spread 0.03 across bodies) — a small, real behavioural manifold indexed by the body.
+- **Orderable dial.** Sweeping the body's magnitude is a monotone *coherence/diversity* knob
+  (diversity 0.47→0.31, PPL 3.8→9.3 as dose rises). The body is a low-dimensional control, not noise.
+
+### 2. A body that senses the computation beats blind noise on a task (weak but real)
+
+Loop-breaking: greedy GPT-2 falls into repetition (*"a place of great danger"* ×4). On the
+diversity/coherence frontier, an entropy-sensing body-gain adds diversity **more efficiently**
+than blind noise (+0.072 distinct-2 per +0.32 PPL = 0.22, vs blind noise's 0.18) because it is
+targeted — the gain rises exactly when the model goes confident/repetitive. Modest, but it is the
+"acting with" case: a self-sensing knob does better than an equal amount of blind perturbation.
+
+### 3. ⭐ A coherent body can be LIFTED out of what looks like noise (`gpt2_liftsignal.py`)
+
+This is the crux of "not noise". Inject *unbiased, mean-preserved* fluctuation at layer 4 whose
+std is modulated by a slow signal b(t), read the population at layer 8, and try to recover b(t)
+by cross-unit energy averaging + temporal EMA — advanced analysis a downstream circuit could do.
+
+| condition | R²(recovered, b) | MI | what it is |
+|---|---|---|---|
+| **body** (coherent — b(t) scales all units together) | **0.62** | 0.73 | one signal, many units |
+| **incoherent** (same magnitude, b time-shuffled per unit) | **0.00** | — | no shared signal |
+| **white** (constant std, no b) | 0.01 | — | pure noise |
+
+- **The signal is recoverable (R² 0.62) from fluctuation that is mean-zero and, per single unit,
+  indistinguishable from noise** — but *only* when the body is a coherent modulator. Matched
+  incoherent noise of the identical magnitude yields R² 0.00. Structure, not magnitude, is the
+  whole difference.
+- **√N signature confirms population coding:** R² grows as more units are averaged (1 unit 0.41 →
+  768 units 0.62) for `body`, and stays ~0 at every N for `incoherent`. A coherent signal in noise
+  is exactly what population averaging pulls out; incoherent noise has nothing to pull.
+- **Spectral:** b(t)'s slow rhythm carries 0.215 of the recovered spectrum for `body` vs 0.02 for
+  the controls — the recovered trace *is* b(t), not an artifact.
+
+This is the constructive resolution of "unbiased = unread": unbiased in the **mean**, yet fully
+readable in the **population variance** — provided the body is coherent across units. A downstream
+unit reading its own population statistics can recover and act on a body it could never see in any
+single unit. That is interoception in the correct sense (Phase C), demonstrated on GPT-2: the body
+is not noise the moment it is coherent, even while every mean-based test still calls it "unread".
+
+### The exchange, stated plainly
+
+Giving up strict bit-exact arithmetic buys: **(a)** a reproducible, orderable, low-dimensional
+behavioural manifold — a temperament dial that noise cannot provide; **(b)** a modest task edge
+when the body *senses* the computation rather than perturbing it blindly; and **(c)** a channel
+that is genuinely *readable* — a coherent body survives as a recoverable signal in the population
+variance even when it is unbiased and noise-like per unit. The cost is coherence, which degrades
+with dose and sets the usable window. What you must supply to collect any of it is **coherence**:
+an incoherent body of the same magnitude is, measurably, just noise.
+
+*Reproduce:* `python -m numeric_rooting.gpt2_advantage` (personality + loop-breaking) ·
+`python -m numeric_rooting.gpt2_liftsignal` (signal recovery). Outputs saved in `results/`.

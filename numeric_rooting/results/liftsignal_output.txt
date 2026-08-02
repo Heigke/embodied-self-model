@@ -1,0 +1,21 @@
+inject fluctuation at layer 4, read population at layer 8, T=320 passes
+
+Recover b(t) from the population — body (coherent) vs matched controls:
+  condition     R^2(recovered,b)   MI(recovered;b)   note
+  body          0.621              0.726            coherent modulator
+  incoherent    0.000              0.479            same magnitude, no shared signal
+  white         0.013              0.400            constant std, no b(t)
+
+sqrt(N) signature — R^2 vs number of units averaged (coherent signal grows with N):
+  N_units:       1     4    16    64   256   768
+  body       0.41  0.37  0.56  0.58  0.65  0.62
+  incoherent 0.04  0.00  0.00  0.01  0.02  0.00
+
+spectral check — is b(t)'s slow rhythm present in the recovered signal?
+  body       : energy at b's peak frequency = 0.215 of recovered spectrum
+  incoherent : energy at b's peak frequency = 0.021 of recovered spectrum
+  white      : energy at b's peak frequency = 0.026 of recovered spectrum
+
+=> if body >> incoherent/white, a coherent body signal is LIFTABLE from noise-like
+   fluctuation by population averaging + temporal integration — a downstream unit
+   reading its own population variance can act on the body it could never see per-unit.

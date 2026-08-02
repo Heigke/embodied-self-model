@@ -1,0 +1,32 @@
+============================================================================
+A. PERSONALITY — reproducibility & separability (body vs noise), dose=0.10
+============================================================================
+  body : two runs identical? True   (body must be reproducible to be a persona)
+  noise: two runs identical? False   (body must be reproducible to be a persona)
+
+  separability of 4 distinct bodies (feature spread across bodies vs within):
+    valence   : bodies -> [np.float64(0.035), np.float64(0.019), np.float64(0.063), np.float64(-0.015)]  spread=0.0281
+    hedging   : bodies -> [np.float64(0.0), np.float64(0.0), np.float64(0.014), np.float64(0.0)]  spread=0.0059
+    self_ref  : bodies -> [np.float64(0.0), np.float64(0.013), np.float64(0.014), np.float64(0.0)]  spread=0.0066
+    diversity : bodies -> [np.float64(0.624), np.float64(0.626), np.float64(0.451), np.float64(0.478)]  spread=0.0807
+
+  ORDERABLE DIAL — does dose monotonically shift a persona feature? (fixed body_id=3)
+   dose   diversity  valence  hedging  fluency  ppl
+   0.00   0.472     +0.012   0.007    -1.05   3.8
+   0.05   0.406     +0.011   0.000    -1.09   4.0
+   0.10   0.420     +0.029   0.000    -1.14   4.0
+   0.15   0.410     -0.007   0.000    -1.06   4.2
+   0.20   0.419     +0.000   0.006    -1.20   5.6
+   0.28   0.311     +0.000   0.000    -1.29   9.3
+
+============================================================================
+B. TASK: LOOP-BREAKING — strict (loops) vs blind noise vs body (entropy-sensing)
+============================================================================
+  mode      maxrun  distinct2   ppl(coherence)   (lower maxrun + low ppl = win)
+  strict (bit-exact   )   1.0    0.407        3.23
+  noise  (blind noise )   1.0    0.589        4.26
+  body   (sensing gain)   1.0    0.479        3.55
+
+  sample (prompt 0):
+    [strict] ', the world was a place of great beauty and great danger. The world was a place of great danger, and the world was a place of great danger. The world was a place of great danger, and the world was a place of'
+    [body] ', the world will be a place where the human race is not.\n\nThe world is a place where the human race is not.\n\nThe world is a place where the human race is not.\n\nThe world is a'
