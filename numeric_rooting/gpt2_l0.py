@@ -64,17 +64,27 @@ def _layer_index(name):
 
 
 def install(model, regime, dose, layers=None, seed=0):
-    """Attach body-biased rounding to matmul outputs. Returns removable handles.
-       regime M: dose = mean-shift b (mantissa fixed at 7). regime V: dose = bits dropped."""
+    """Attach a body-modulated arithmetic intervention to matmul outputs.
+       Aggression ladder (plan 5c), gentle -> destructive:
+         M       mean-shift stochastic rounding  (dose = bias b; mantissa 7)
+         V       precision truncation            (dose = mantissa bits dropped)
+         scale   multiplicative gain jitter       (dose = std of (1+dose*noise))
+         signflip sign corruption                 (dose = fraction of elements flipped)
+       M/V live inside the rounding; scale/signflip are the far, destructive rungs."""
     gen = torch.Generator().manual_seed(seed)
     handles = []
-    if regime == "M":
-        m, b = 7, float(dose)
-    else:  # V
-        m, b = int(max(2, round(7 - dose))), 0.0
+    m = int(max(2, round(7 - dose))) if regime == "V" else 7
+    b = float(dose) if regime == "M" else 0.0
 
     def hook(mod, inp, out):
-        return sr_round_torch(out, m, b, gen)
+        if regime in ("M", "V"):
+            return sr_round_torch(out, m, b, gen)
+        if regime == "scale":
+            return out * (1.0 + dose * torch.randn(out.shape, generator=gen))
+        if regime == "signflip":
+            flip = (torch.rand(out.shape, generator=gen) < dose)
+            return torch.where(flip, -out, out)
+        return out
 
     for _, mod in target_modules(model, layers):
         handles.append(mod.register_forward_hook(hook))
