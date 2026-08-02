@@ -127,3 +127,74 @@ route *stands in principle*, not what a real transformer does. That remains the 
 
 *Reproduce:* `python -m numeric_rooting.run_night` (resumes from `results/`);
 per-phase self-tests: `python -m numeric_rooting.{srr,plant,metrics,system,reader}`.
+
+---
+
+# GPT-2 (124M) — the L0 experiment on a real transformer
+
+The small-MLP result above bounds what is *possible*. This section runs the plan's actual
+L0 site — body-biased stochastic rounding on the **output of every attention/MLP matmul in
+GPT-2**, via a PyTorch hook — and measures behaviour vs coherence on real language.
+**86 cells** (`gpt2_sweep.py`). Behaviour = KL(pristine ‖ perturbed) next-token dist;
+coherence = perplexity on held text (pristine PPL 29.6). The load-bearing test is
+`kl_seedmean/kl_single`: how much of the effect survives averaging over rounding seeds — a
+genuine MEAN effect (→1) versus noise that averages away (→0).
+
+## The two safe regimes are unread — confirmed on a real model
+
+| regime | max behaviour (kl_single) | survives seed-avg (kl_seedmean/kl_single) | coherence cost |
+|---|---|---|---|
+| **M** mean-shift | 0.0001 | **0.00** | none (PPL ×1.00) |
+| **V** precision | 0.026 | **0.10** | none (PPL ×1.06 at 5 bits dropped) |
+
+- **M is fully laundered by LayerNorm.** kl_single ≈ 0 and kl_seedmean = 0 at every dose up to
+  b = 1.5. A uniform mean-shift on the residual stream is normalised away before it can route.
+- **V is unbiased, exactly as the theory says.** ~90 % of its single-pass effect averages out
+  (ratio 0.10), it never dents coherence, and its total leverage is tiny (KL ≤ 0.026). The
+  unbiased channel is safe *and* unread.
+
+So on GPT-2 the §3 theorem holds directly and mechanistically: **the mean channel is actively
+laundered, the variance channel averages itself away.** Moving from an MLP to a real transformer
+made the null *stronger*, not weaker.
+
+## The one partial escape: multiplicative gain (`scale`)
+
+Pushing the aggression ladder past pure rounding, one rung behaves differently:
+
+| rung | behaviour moves (kl>0.01) @ dose | coherence degrades (PPL>1.5×) @ | breaks (PPL>2×) @ | survives seed-avg | depth peak |
+|---|---|---|---|---|---|
+| **scale** (gain jitter) | 0.037 (PPL ×1.007) | 0.163 | 0.269 | **0.28** | layer 5 (mid) |
+| **signflip** (sign corruption) | 0.001 (PPL ×1.26) | 0.003 | 0.003 | 0.74 | layer 1 (early) |
+
+- **`scale` has a usable window.** Between dose ≈ 0.04 and ≈ 0.16 a body-modulated multiplicative
+  gain moves behaviour (KL 0.015 → 0.28) while text stays coherent (PPL ×1.007 → ×1.5), and
+  **~28 % of that effect survives seed-averaging** — a real mean effect, not just noise. This is
+  the only intervention on GPT-2 that is both load-bearing and non-destructive. It points
+  straight at the programme's open problem #4 (*Format — gain modulation?*): the load-bearing
+  site on a transformer is a **multiplicative gain**, not an additive rounding bias, because
+  additive bias is what LayerNorm exists to remove.
+- **`signflip` is load-bearing but destroys coherence instantly** (74 % survives averaging, but
+  PPL blows up by the second dose). The far anchor: it proves the wall exists and that a strong
+  mean effect is reachable — at the cost of the computation.
+- **Depth:** `scale` peaks mid-stack (layer 5), `signflip` peaks early (layer 1, errors then
+  propagate through the whole stack). `V`/`M` are flat — no depth structure because they carry
+  nothing.
+
+## GPT-2 synthesis
+
+1. **Both safe rounding regimes (M, V) are unread on a real transformer** — M laundered by
+   LayerNorm, V averaged away. The §3 theorem is confirmed at L0, mechanistically.
+2. **The load-bearing site is multiplicative gain, not additive rounding.** `scale` is the single
+   rung with a genuine mean effect *and* a coherence-preserving window, peaking mid-depth. That is
+   a concrete, positive lead for the plan's format question, and the most useful thing the GPT-2
+   run produced.
+3. The behaviour-vs-coherence gap the plan wanted exists **only for `scale`**: for V it never
+   opens (no leverage), for `signflip` it never opens (destroys as it moves). One rung, one window.
+
+Caveats held: single held-text perplexity and 6 prompts (coarse behaviour/coherence estimates);
+greedy next-token KL, not full generation; GPT-2 small only. These bound the claim to "on GPT-2
+small, at the matmul-output rounding site" — not all transformers, not the internal tensor-core
+MMA. Still functional/mechanistic only; no phenomenal claim.
+
+*Reproduce GPT-2:* `python -m numeric_rooting.gpt2_l0` (dose table) ·
+`python -m numeric_rooting.gpt2_sweep` (full 86-cell sweep, resumes from `results/`).
