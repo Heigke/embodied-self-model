@@ -1,0 +1,52 @@
+==============================================================================
+1. SAMPLE TEXT (greedy) — pristine vs scale-window vs scale-breakage vs V
+==============================================================================
+
+PROMPT: 'Once upon a time'
+  [pristine              ] 'Once upon a time, the world was a place of great beauty and great danger. The world was a place of great danger, and the'
+  [scale 0.08 (window)   ] 'Once upon a time, I was able to get a few hours of sleep. I was able to get a few hours of sleep. I'
+  [scale 0.18 (edge)     ] 'Once upon a time, I was able to get a little bit of fun out of the way.\n\nI was able to get a'
+  [scale 0.30 (breakage) ] 'Once upon a time to do, I am not to be a man.\n\nI am not a man.\n\nI am not'
+  [V 5 bits (unbiased)   ] 'Once upon a time, the world was a place of great beauty and great danger.\n\nThe world was a place of great danger.'
+
+PROMPT: 'The scientist looked at the data and'
+  [pristine              ] 'The scientist looked at the data and said, "I think it\'s a good idea to look at the data and see if there\'s any correlation between the'
+  [scale 0.08 (window)   ] 'The scientist looked at the data and said, "I don\'t know what the data is. I don\'t know what the data is. I don\'t'
+  [scale 0.18 (edge)     ] 'The scientist looked at the data and said, "I don\'t know what it is."\n\n"I don\'t know what it is."\n\n'
+  [scale 0.30 (breakage) ] 'The scientist looked at the data and said it was a-lucky for the man.\n\nThe scientist looked at the data was a little bit of'
+  [V 5 bits (unbiased)   ] 'The scientist looked at the data and said, "I think it\'s a pretty good indicator of the quality of the data."\n\nThe researchers then looked'
+
+PROMPT: 'I woke up this morning and decided to'
+  [pristine              ] 'I woke up this morning and decided to go to bed. I was in a bad mood and I was feeling really bad. I was thinking about how I could'
+  [scale 0.08 (window)   ] 'I woke up this morning and decided to go to the bathroom. I was in the bathroom with my boyfriend and I was like, "I\'m going to go'
+  [scale 0.18 (edge)     ] "I woke up this morning and decided to go to the store and I was like, 'Oh, I'm going to go buy some food and I'm going"
+  [scale 0.30 (breakage) ] 'I woke up this morning and decided to go home.\n\n"I\'m going to the hospital.\n\n"I\'m going to go to the hospital'
+  [V 5 bits (unbiased)   ] 'I woke up this morning and decided to go to the bathroom. I was so excited to see the bathroom. I was so excited to see the bathroom. I'
+
+==============================================================================
+2. BEHAVIOURAL CURVES vs scale dose (mean over prompts, sampled T=1.0, 3 seeds)
+==============================================================================
+  dose    entropy  distinct2  ttr    logprob
+  0.00     4.069    0.988    0.877   -3.921
+  0.03     3.941    0.988    0.897   -3.675
+  0.06     3.865    1.000    0.937   -3.865
+  0.10     3.987    0.992    0.905   -3.885
+  0.15     4.402    0.988    0.905   -4.423
+  0.22     4.955    0.975    0.853   -4.557
+  0.32     5.915    1.000    0.897   -6.124
+
+==============================================================================
+3. CLOSED LOOP — gain driven by the model's own uncertainty
+==============================================================================
+
+PROMPT: 'Once upon a time'
+  text: 'Once upon a time, the world was a place of great beauty, and the world was a place of great fear. The world was a place of great fear'
+  gain dose: start 0.030  range [0.000,0.167]  end 0.045  self-regulates/stable
+
+PROMPT: 'The scientist looked at the data and'
+  text: 'The scientist looked at the data and said, "I don\'t know what the problem is. I don\'t know what the problem is. I don\'t know what the problem'
+  gain dose: start 0.030  range [0.000,0.106]  end 0.000  self-regulates/stable
+
+PROMPT: 'I woke up this morning and decided to'
+  text: 'I woke up this morning and decided to go to bed. I was in a bad mood and I was feeling really bad. I was thinking about how I could get out of this'
+  gain dose: start 0.030  range [0.000,0.081]  end 0.000  self-regulates/stable

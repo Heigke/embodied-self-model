@@ -198,3 +198,33 @@ MMA. Still functional/mechanistic only; no phenomenal claim.
 
 *Reproduce GPT-2:* `python -m numeric_rooting.gpt2_l0` (dose table) ·
 `python -m numeric_rooting.gpt2_sweep` (full 86-cell sweep, resumes from `results/`).
+
+## Does anything interesting happen to the BEHAVIOUR? (generated text)
+
+KL/PPL are scalars. Reading the actual generations (`results/behaviour_samples.txt`,
+`gpt2_behaviour.py`) shows the effect is real and legible:
+
+- **The unbiased regime (V) leaves behaviour visibly unchanged.** Greedy text under V at 5
+  dropped bits is near-identical to pristine — *"Once upon a time, the world was a place of
+  great beauty and great danger"* both times. The "unread" theorem, now readable on the page.
+- **Body-modulated gain (scale) in its window steers WHAT the model says, not HOW.** At dose
+  0.08–0.18 the grammar stays intact but the *content* shifts — the same prompt goes from
+  *"the world was a place of great beauty and great danger"* to *"I was able to get a few hours
+  of sleep"* to *"go to the store … buy some food"*. The body nudges the topic while the
+  sentence stays well-formed. This is the interesting effect: a numeric knob steering semantics
+  coherently.
+- **A small perturbation SHARPENS the model, a large one DIFFUSES it** — non-monotonic. Output
+  entropy dips (4.07→3.87) and fluency *rises* (mean log-prob −3.92→−3.68) at dose ≈ 0.03–0.06 —
+  a mild gain makes GPT-2 slightly more decisive and more fluent — then entropy climbs to 5.9 and
+  fluency collapses to −6.1 by dose 0.32. There is a small "sweet spot" where the body helps.
+- **Breakage is legible too:** at dose 0.30 grammar dissolves — *"Once upon a time to do, I am
+  not to be a man"*, *"a-lucky for the man"*. The coherence wall, in words.
+- **Closed loop self-regulates.** When the gain is driven by the model's OWN uncertainty
+  (dose_t = base + k·(entropy_{t−1}−H₀)) during generation, the dose rises when the model is
+  unsure (up to ~0.17) and settles back toward 0 as it grows confident — bounded, no spiral, in
+  all three prompts. A crude homeostat on live GPT-2 generation: the computation's own state
+  modulating its own arithmetic, staying in the coherent band.
+
+So the behavioural picture matches the numbers: the safe/unbiased channel is invisible in the
+text, and the one load-bearing channel (gain) has a real, coherent, steerable window before the
+wall — and even closes a stable loop on the model's own uncertainty.
